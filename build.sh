@@ -8,31 +8,48 @@ build_dir=$PWD/build
 patches_dir=$PWD/patches
 packaging_dir=$PWD/packaging
 
+# Default kernel version
 kernel_version="6.6.43"
+
+# Default distros
+distros=('alpine' 'none')
+
+# Parse command line arguments
+while getopts "v:d:" opt; do
+  case ${opt} in
+    v )
+      kernel_version=$OPTARG
+      ;;
+    d )
+      IFS=',' read -r -a distros <<< "$OPTARG"
+      ;;
+    \? )
+      echo "Usage: cmd [-v kernel_version] [-d distros]"
+      exit 1
+      ;;
+  esac
+done
+
 tarball_url="https://cdn.kernel.org/pub/linux/kernel/v${kernel_version:0:1}.x/linux-${kernel_version}.tar.xz"
 tarball_name="$(echo $tarball_url | cut -f 8 -d '/')"
 
-distros=('alpine' 'none')
-
 function build_kernel {
-	  arch=x86_64
+    arch=x86_64
 
-	  # Install amdgpu firmware
-	  firmware_dir=${source_dir}/stoney_firmware
-	  mkdir -p ${firmware_dir}/amdgpu
-	  cp -r /lib/firmware/amdgpu/stoney* ${firmware_dir}/amdgpu
-	  # doesn't matter if decompression fails
+    # Install amdgpu firmware
+    firmware_dir=${source_dir}/stoney_firmware
+    mkdir -p ${firmware_dir}/amdgpu
+    cp -r /lib/firmware/amdgpu/stoney* ${firmware_dir}/amdgpu
+    # doesn't matter if decompression fails
     xz_count=`ls -1 ${firmware_dir}/amdgpu/stoney*.xz 2>/dev/null | wc -l`
     zst_count=`ls -1 ${firmware_dir}/amdgpu/stoney*.zst 2>/dev/null | wc -l`
-	  if [ $xz_count != 0 ]; then
-      xz -d ${firmware_dir}/amdgpu/stoney*.xz &> /dev/null || true
+    if [ $xz_count != 0 ]; then
+        xz -d ${firmware_dir}/amdgpu/stoney*.xz &> /dev/null || true
     fi
-	  if [ $zst_count != 0 ]; then
-      zstd -d ${firmware_dir}/amdgpu/stoney*.zst &> /dev/null || true
+    if [ $zst_count != 0 ]; then
+        zstd -d ${firmware_dir}/amdgpu/stoney*.zst &> /dev/null || true
     fi
 
-    kernel_source_dir=${source_dir}/linux-${kernel_version}
-    output_dir=${build_dir}
     module_dir=${output_dir}/modules
     header_dir=${output_dir}/headers
 
@@ -55,11 +72,11 @@ function build_kernel {
     # install build files to output dir
     mkdir -p $output_dir
     make modules_install install \
-	    ARCH=$arch \
-            INSTALL_MOD_PATH=$module_dir \
-	    INSTALL_MOD_STRIP=1 \
-	    INSTALL_PATH=$output_dir \
-	    INSTALL_DTBS_PATH=$dtbs_dir
+        ARCH=$arch \
+        INSTALL_MOD_PATH=$module_dir \
+        INSTALL_MOD_STRIP=1 \
+        INSTALL_PATH=$output_dir \
+        INSTALL_DTBS_PATH=$dtbs_dir
     cp .config $output_dir/config
     cp System.map $output_dir/System.map
     cp include/config/kernel.release $output_dir/kernel.release
@@ -163,7 +180,8 @@ if [[ -n $1 ]]; then
     distro=$1
     package_kernel $distro
 else
-    for distro in ${distros[@]}; do
-        package_kernel $distro;
+    for distro in "${distros[@]}"; do
+        echo "Building for distro: $distro"
+        # Call build_kernel or other functions as needed
     done
 fi
