@@ -9,7 +9,7 @@ patches_dir=$PWD/patches
 packaging_dir=$PWD/packaging
 
 # Default kernel version
-kernel_version="6.6.43"
+kernel_version="6.6.48"
 
 # Default distros
 distros=('alpine' 'none')
