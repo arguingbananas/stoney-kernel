@@ -144,7 +144,8 @@ function package_kernel {
     case $distro in
     alpine)
         package_dir=${packaging_dir}/alpine/pkg/community/linux-chrultrabook-stoney/
-        cp ${build_dir}/kernel.tar.gz ${package_dir}
+        mkdir -p ${package_dir}
+								cp ${build_dir}/kernel.tar.gz ${package_dir}
         cp ${package_dir}/APKBUILD.template ${package_dir}/APKBUILD
         sed -i "s/KERNELVER/${kernel_version}/g" ${package_dir}/APKBUILD
         $elevate $container run --rm \
