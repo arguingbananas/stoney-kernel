@@ -153,7 +153,7 @@ function package_kernel {
             --platform linux/x86_64 \
             -v ${packaging_dir}/alpine:/stoney:z \
             -it alpine \
-            /stoney/steps.sh $USER
+            /stoney/package.sh $USER
         $elevate chown -R $USER:$USER packaging/
     ;;
     esac
